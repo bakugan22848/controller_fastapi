@@ -1,0 +1,7 @@
+.env
+my_logs.log
+
+.idea/
+venv/
+__pycache__/
+app/__pycache__/
