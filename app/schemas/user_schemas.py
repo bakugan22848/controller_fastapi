@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field, EmailStr, UUID4
 
@@ -26,9 +26,9 @@ class SignIn(BaseModel):
     password: str = Field(max_length=50)
 
 class UserUpdate(BaseModel):
-    email: EmailStr = Field(max_length=50)
-    username: str = Field(max_length=50)
-    password: str = Field(max_length=50)
+    email: Optional[EmailStr] = Field(max_length=50)
+    username: Optional[str] = Field(max_length=50)
+    password: Optional[str] = Field(max_length=50)
 
 class UserList(TunedModel):
     users: List[User]

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field, EmailStr, UUID4
 
@@ -11,8 +11,8 @@ class Controller(TunedModel):
     id: UUID4
     name: str
     device_id: UUID4
-    last_state: bool
-    trigger_value: int
+    last_state: Optional[bool] = None
+    trigger_value: Optional[int] = None
     created_at: datetime
     updated_at: datetime
 
@@ -22,7 +22,9 @@ class ControllerCreate(BaseModel):
     trigger_value: int
 
 class ControllerUpdate(BaseModel):
-    name: str
+    name: Optional[str] = None
+    trigger_value: Optional[int] = None
+    last_state: Optional[bool] = None
 
 class ControllerList(TunedModel):
     controllers: List[Controller]

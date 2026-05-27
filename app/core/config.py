@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     DB_HOST: str
     DB_PORT: int
 
+    JWT_SECRET: str
+    JWT_ALGORITHM: str
+
     model_config = SettingsConfigDict(env_file=".env")
 
 

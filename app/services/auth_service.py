@@ -1,4 +1,5 @@
 from tokenize import TokenInfo
+from uuid import UUID
 
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -54,9 +55,9 @@ class AuthService:
             "hashed_password" : hashed_password.decode('utf-8'),
         }
 
-        await self.repository.create_one(user_data)
+        new_user = await self.repository.create_one(user_data)
 
-        token = await auth.encode_jwt({"email": email})
+        token = await auth.encode_jwt({"sub": str(new_user.id), "email": email})
         token_info = TokenInfo(access_token=token, token_type="Bearer")
         return token_info
 
@@ -69,12 +70,12 @@ class AuthService:
         if not payload:
             raise HTTPException(status_code=403, detail="Invalid credentials")
 
-        email = payload.get("email")
-        if not email:
+        user_id = payload.get("sub")
+        if not user_id:
             raise HTTPException(status_code=404, detail="User not found")
 
         user_repository = UserRepository(session=session)
-        result = await user_repository.get_one(email=email)
+        result = await user_repository.get_one(id=UUID(user_id))
         if not result:
             raise HTTPException(status_code=404, detail="User not found")
 

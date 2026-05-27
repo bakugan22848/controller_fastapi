@@ -14,9 +14,16 @@ class Device(TunedModel):
     created_at: datetime
     updated_at: datetime
 
-class DeviceCreate(BaseModel):
+class DeviceWCount(TunedModel):
+    id:UUID4
     name: str
     user_id: UUID4
+    periph_count: int
+    created_at: datetime
+    updated_at: datetime
+
+class DeviceCreate(BaseModel):
+    name: str
 
 class DeviceUpdate(BaseModel):
     name: str

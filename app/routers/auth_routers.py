@@ -3,7 +3,6 @@ from fastapi import Depends, APIRouter
 from app.routers.dependencies import auth_service_dep
 from app.schemas.auth_schemas import TokenInfo
 from app.schemas.user_schemas import SignUp,SignIn, User
-from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/jwt",tags=["JWT"])
 

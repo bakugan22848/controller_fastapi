@@ -3,10 +3,12 @@ from datetime import datetime, timedelta
 import jwt
 import bcrypt
 
+from app.core.config import settings
 
-JWT_SECRET = "jopa_opa_opa_pa"
-JWT_ALGORITHM = "HS256"
-JWT_EXPIRE_MINUTES = 30
+JWT_SECRET = settings.JWT_SECRET
+JWT_ALGORITHM = settings.JWT_ALGORITHM
+
+JWT_EXPIRE_MINUTES = 200
 
 async def encode_jwt(data:dict) -> str:
     to_encode = data.copy()
@@ -17,7 +19,7 @@ async def encode_jwt(data:dict) -> str:
 
 def decode_jwt(token: str) -> dict:
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=JWT_ALGORITHM)
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         return payload
     except jwt.ExpiredSignatureError:
         return None

@@ -4,10 +4,13 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.database import get_db
+from app.repositories import trigger_repository, controller_repository
+from app.repositories.base_repository import BaseRepository
 from app.repositories.controller_repository import ControllerRepository
 from app.repositories.device_repository import DeviceRepository
 from app.repositories.trigger_repository import TriggerRepository
 from app.repositories.user_repository import UserRepository
+from app.services.admin_service import AdminService
 from app.services.controller_service import ControllerService
 
 from app.services.device_service import DeviceService
@@ -27,21 +30,31 @@ async def get_auth_service(session: session_dep) -> AuthService:
 
 async def get_device_service(session: session_dep) -> DeviceService:
     device_repository = DeviceRepository(session)
-    return DeviceService(session=session, repository=device_repository)
+    trigger_repository = TriggerRepository(session)
+    controller_repository = ControllerRepository(session)
+    return DeviceService(session=session, repository=device_repository, trigger_repository=trigger_repository,
+                         controller_repository=controller_repository)
 
 async def get_trigger_service(session: session_dep) -> TriggerService:
     trigger_repository = TriggerRepository(session)
-    return TriggerService(session=session, repository=trigger_repository)
+    device_repository = DeviceRepository(session)
+    return TriggerService(session=session, repository=trigger_repository, device_repository=device_repository)
 
 async def get_controller_service(session: session_dep) -> ControllerService:
     controller_repository = ControllerRepository(session)
-    return ControllerService(session=session, repository=controller_repository)
+    device_repository = DeviceRepository(session)
+    return ControllerService(session=session, repository=controller_repository, device_repository=device_repository)
+
+async def get_admin_service(session: session_dep) -> AdminService:
+    base_repository = BaseRepository(session)
+    return AdminService(session=session, repository=base_repository)
 
 user_service_dep = Annotated[UserService, Depends(get_user_service)]
 auth_service_dep = Annotated[AuthService, Depends(get_auth_service)]
 device_service_dep = Annotated[DeviceService, Depends(get_device_service)]
 trigger_service_dep = Annotated[TriggerService, Depends(get_trigger_service)]
 controller_service_dep = Annotated[ControllerService, Depends(get_controller_service)]
+admin_service_dep = Annotated[AdminService, Depends(get_admin_service)]
 
 
 

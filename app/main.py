@@ -8,6 +8,7 @@ from app.routers.device_routers import router as device_router
 from app.routers.trigger_routers import router as trigger_router
 from app.routers.controller_routers import router as controller_router
 from app.routers.auth_routers import router as auth_router
+from app.routers.admin_routers import router as admin_router
 
 from app.core.config import settings as stt
 app = FastAPI()
@@ -23,6 +24,7 @@ app.include_router(device_router)
 app.include_router(trigger_router)
 app.include_router(controller_router)
 app.include_router(auth_router)
+app.include_router(admin_router)
 
 if __name__ == "__main__":
     uvicorn.run("main.py:app", host=stt.HOST, port=stt.PORT, reload=True)
