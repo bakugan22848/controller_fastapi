@@ -1,6 +1,7 @@
 from typing import List
 
-from pydantic import BaseModel, Field, EmailStr, UUID4
+from pydantic import BaseModel, UUID4
+from sqlalchemy import TIMESTAMP
 
 
 class TunedModel(BaseModel):
@@ -11,7 +12,7 @@ class TunedModel(BaseModel):
 class TriggerData(TunedModel):
     trigger_id: UUID4
     value: int
-    created_at: datetime
+    created_at: TIMESTAMP
 
 
 class AddTriggerData(BaseModel):
