@@ -16,5 +16,6 @@ class Controller(Base):
     last_state = Column(Boolean)
     trigger_value = Column(Integer)
     is_automatic = Column(Boolean)
+    pin = Column(Integer, nullable=False)
     created_at = Column(TIMESTAMP, default=datetime.utcnow())
     updated_at = Column(TIMESTAMP, default=datetime.utcnow())

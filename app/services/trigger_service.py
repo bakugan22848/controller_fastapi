@@ -33,10 +33,10 @@ class TriggerService:
             trigger_data = {
                 "name": data.name,
                 "device_id": data.device_id,
-                "controller_id": data.controller_id,
+                "notif_state": data.notif_state,
                 "notif_value": data.notif_value,
-                "check_clock": data.check_clock,
-                "write_clock": data.write_clock
+                "type": data.type,
+                "pin": data.pin
             }
 
             trigger = await self.repository.create_one(trigger_data)

@@ -1,3 +1,11 @@
+import os
+import shutil
+import subprocess
+import time
+
+from jinja2 import Template
+import glob
+
 from datetime import datetime
 from pydantic import UUID4
 from fastapi import HTTPException, status
@@ -22,6 +30,94 @@ class EspService:
         self.controller_repository = controller_repository
         self.device_repository = device_repository
 
+        self.template_dir = "C:/Users/ashna/PycharmProjects/ControllerBackEnd/esp_firmware_template"
+
+        self.builds_dir = "C:/Users/ashna/PycharmProjects/ControllerBackEnd/builds"
+        os.makedirs(self.builds_dir, exist_ok=True)
+
+    async def generate_firmware_for_device(self, device_id: UUID4):
+        triggers = await self.trigger_repository.get_many_by(device_id=device_id)
+        triggers_config = []
+
+        for t in triggers:
+            triggers_config.append({
+                "id": str(t.id),
+                "name": t.name,
+                "type": t.type,
+                "pin": t.pin
+            })
+
+        controllers = await self.controller_repository.get_many_by(device_id=device_id)
+        controllers_config = []
+        for c in controllers:
+            controllers_config.append({
+                "id": str(c.id),
+                "name": c.name,
+                "pin": c.pin,
+            })
+
+        template_path = os.path.join(self.template_dir, "template.cpp")
+        main_cpp_path = os.path.join(self.template_dir, "src", "main.cpp")
+        with open(template_path, "r", encoding="utf-8")as f:
+            template_content = f.read()
+
+        build_version = str(int(time.time()))  # Наприклад: "1748361234"
+
+        template = Template(template_content)
+        rendered_code = template.render(
+            triggers=triggers_config,
+            controllers=controllers_config,
+            device_id=str(device_id),
+            build_version=build_version
+        )
+
+        with open(main_cpp_path, "w", encoding="utf-8") as f:
+            f.write(rendered_code)
+
+        old_firmwares = glob.glob(os.path.join(self.builds_dir, f"{device_id}_*.bin"))
+        for old_file in old_firmwares:
+            try:
+                os.remove(old_file)
+                print(f"Видалено стару версію прошивки: {old_file}")
+            except Exception as e:
+                print(f"Не вдалося видалити файл {old_file}: {e}")
+        # ----------------================================================-
+
+        print(f"Початок прямої збірки прошивки для пристрою {device_id}...")
+
+        pio_path = "C:/Users/ashna/.platformio/penv/Scripts/pio.exe"
+
+        # 3. Запускаємо PlatformIO і компілюємо файл одразу в потрібне місце
+        result = subprocess.run(
+            [pio_path, "run", "-d", self.template_dir],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            shell=True
+        )
+
+        if result.returncode != 0:
+            print("Помилка компіляції PlatformIO:", result.stderr)
+            raise HTTPException(status_code=500, detail="PlatformIO compilation failed")
+
+        compiled_bin_path = os.path.join(self.template_dir, ".pio", "build", "esp32doit-devkit-v1", "firmware.bin")
+
+        if not os.path.exists(compiled_bin_path):
+            raise HTTPException(status_code=500, detail="Compiled firmware.bin not found")
+
+        target_bin_path = os.path.join(self.builds_dir, f"{device_id}_{build_version}.bin")
+        shutil.copyfile(compiled_bin_path, target_bin_path)
+        print(f"[SUCCESS] Нову прошивку скопійовано в: {target_bin_path}")
+
+        # 6. ЕКОНОМІЯ ПАМ'ЯТІ: Видаляємо оригінальний firmware.bin з папки .pio,
+        # щоб він не дублювався і не займав місце на сервері!
+        try:
+            os.remove(compiled_bin_path)
+            print("[CLEANUP] Оригінальний файл firmware.bin у папці шаблону видалено.")
+        except Exception as e:
+            print(f"[CLEANUP] Не вдалося видалити оригінальний firmware.bin: {e}")
+
+        return build_version
 
 
     async def update_last_val(self, trigger_id: UUID4, payload: TriggerValueIn) -> TriggerValueIn:
@@ -41,16 +137,18 @@ class EspService:
         controllers = await self.controller_repository.get_many_by(trigger_id=trigger.id)
 
         for controller in controllers:
-            should_be_on = False
+            if not controller.is_automatic:
+                continue
 
             if controller.trigger_vector is None:
                 continue
 
-            if controller.trigger_vector == "less":
+            should_be_on = False
+            if controller.trigger_vector == "<":
                 if trigger.last_value < controller.trigger_value:
                     should_be_on = True
 
-            elif controller.trigger_vector == "more":
+            elif controller.trigger_vector == ">":
                 if trigger.last_value > controller.trigger_value:
                     should_be_on = True
 

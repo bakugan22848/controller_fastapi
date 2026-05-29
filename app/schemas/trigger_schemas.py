@@ -15,8 +15,8 @@ class Trigger(TunedModel):
     notif_state: Optional[bool] = None
     notif_value: Optional[float] = None
     last_value: Optional[float] = None
-    check_clock: int
-    write_clock: int
+    type: str
+    pin: int
     created_at: datetime
     updated_at: datetime
 
@@ -25,15 +25,15 @@ class TriggerCreate(BaseModel):
     device_id: UUID4
     notif_state: Optional[bool] = None
     notif_value: float
-    check_clock: int
-    write_clock: int
+    type: str
+    pin: int
 
 class TriggerUpdate(BaseModel):
     name: Optional[str] = None
     notif_state: Optional[bool] = None
     notif_value: Optional[float] = None
-    check_clock: Optional[int] = None
-    write_clock: Optional[int] = None
+    type: Optional[str] = None
+    pin: Optional[int] = None
 
 class TriggerList(TunedModel):
     triggers: List[Trigger]

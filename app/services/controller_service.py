@@ -33,6 +33,7 @@ class ControllerService:
                 "name": data.name,
                 "device_id": data.device_id,
                 "trigger_value": data.trigger_value,
+                "pin": data.pin,
             }
 
             controller = await self.repository.create_one(controller_data)
